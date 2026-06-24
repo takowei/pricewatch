@@ -2,6 +2,10 @@ __pycache__/
 *.py[cod]
 *.pycache
 .pytest_cache/
+.venv/
+venv/
+.ruff_cache/
+.env
 *.db
 *.sqlite3
 pricewatch_dev.db

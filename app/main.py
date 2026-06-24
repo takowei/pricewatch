@@ -12,6 +12,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.core.rate_limit import limiter
+from app.jobs.scheduler import start_scheduler, stop_scheduler
 from app.routers import admin, alerts, auth, health, products, users, watchlist
 
 
@@ -19,7 +20,9 @@ from app.routers import admin, alerts, auth, health, products, users, watchlist
 async def lifespan(app: FastAPI):
     cfg = get_settings()
     configure_logging(cfg.log_level)
+    start_scheduler()
     yield
+    stop_scheduler()
 
 
 def create_app() -> FastAPI:
