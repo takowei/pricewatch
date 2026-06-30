@@ -11,21 +11,8 @@ jobs:
     name: Lint & Test (Python 3.10)
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: pricewatch_test
-          POSTGRES_USER: pricewatch
-          POSTGRES_PASSWORD: testpass
-        options: >-
-          --health-cmd "pg_isready -U pricewatch -d pricewatch_test"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 10
-        ports:
-          - 5432:5432
-
+    # Tests run against SQLite in-memory (see tests/conftest.py); no postgres
+    # service needed in CI. Production uses postgres via docker-compose.
     steps:
       - uses: actions/checkout@v4
 
