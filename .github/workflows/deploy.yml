@@ -1,0 +1,55 @@
+name: Deploy
+
+# Deploys pricewatch only (pricedrop has its own independent deploy.yml).
+# Runs after CI succeeds on main, or manually via workflow_dispatch.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    name: SSH deploy to production
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Check required secrets are set
+        id: secrets_check
+        run: |
+          if [ -n "${{ secrets.DEPLOY_HOST }}" ] && [ -n "${{ secrets.DEPLOY_SSH_KEY }}" ] && [ -n "${{ secrets.DEPLOY_USER }}" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::DEPLOY_HOST / DEPLOY_USER / DEPLOY_SSH_KEY not set — skipping deploy. See DEPLOY-RUNBOOK.md."
+          fi
+
+      - name: Deploy over SSH
+        if: steps.secrets_check.outputs.ready == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            cd "${DEPLOY_DIR:-$HOME/apps/pricewatch}"
+            git fetch origin main
+            git reset --hard origin/main
+            docker compose build
+            docker compose up -d
+            docker compose exec -T app python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"
+
+            # Rebuild the frontend static bundle (Caddy serves it from a
+            # bind-mounted directory, see DEPLOY-RUNBOOK.md).
+            if command -v bun >/dev/null 2>&1; then
+              cd frontend
+              bun install --frozen-lockfile
+              VITE_API_BASE_URL= bun run build
+            else
+              echo "::warning::bun not found on deploy host — frontend not rebuilt. Run server_bootstrap.sh first."
+            fi
