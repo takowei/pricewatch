@@ -1,5 +1,11 @@
 # PriceWatch — Deployment Guide
 
+> 📌 **The old AWS box this script targeted is no longer reachable.** For
+> deploying to a new server (any Ubuntu host, provisioned generically — not
+> AWS-specific), use `server_bootstrap.sh` + `../DEPLOY-RUNBOOK.md` at the
+> repo root instead. This document and `deploy_aws.sh` are kept for
+> reference / in case an AWS-style single-repo deploy is useful again.
+
 > ⚠️ `deploy_aws.sh` was written by the dev-lead agent but **cannot be tested in the sandbox**
 > (Docker is blocked, and the AWS box is unreachable from the agent).
 > Expect 1–2 rounds of debugging when you run it for the first time.
