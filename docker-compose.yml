@@ -3,6 +3,7 @@ version: "3.9"
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: pricewatch-postgres
     environment:
       POSTGRES_DB: pricewatch
       POSTGRES_USER: pricewatch
@@ -18,6 +19,7 @@ services:
 
   app:
     build: .
+    container_name: pricewatch-app
     env_file: .env
     environment:
       DATABASE_URL: postgresql+psycopg://pricewatch:${POSTGRES_PASSWORD:-changeme}@postgres:5432/pricewatch
@@ -26,9 +28,22 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - default
+      - edge
     # Run migrations then start app
     command: >
       sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1"
 
 volumes:
   pgdata:
+
+# "edge" is the shared reverse-proxy network created once by server_bootstrap.sh
+# (`docker network create edge`). The Caddy container joins the same network
+# and reverse-proxies to the "pricewatch-app" container by name. Declared
+# external so this compose file has no dependency on any other repo/stack.
+# postgres deliberately stays off "edge" — it's only reachable on the default
+# (internal) network, never exposed to the reverse proxy or the internet.
+networks:
+  edge:
+    external: true

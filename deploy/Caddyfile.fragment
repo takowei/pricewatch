@@ -1,0 +1,23 @@
+# Caddy site block for pricewatch.
+#
+# This is a FRAGMENT, not a standalone Caddyfile: server_bootstrap.sh
+# concatenates it with pricedrop's fragment into one Caddyfile for the
+# shared "caddy" reverse-proxy container (both apps run on one server).
+#
+# Replace PRICEWATCH_DOMAIN with your real domain/subdomain before use
+# (server_bootstrap.sh does this substitution for you from your .env).
+#
+# Caddy gets automatic HTTPS (Let's Encrypt) for any domain — just make sure
+# DNS for PRICEWATCH_DOMAIN points at this server's public IP first.
+
+PRICEWATCH_DOMAIN {
+	# API routes -> FastAPI backend container (see docker-compose.yml).
+	@api path /auth* /users* /products* /watchlist* /alerts* /admin* /health /docs /openapi.json
+	reverse_proxy @api pricewatch-app:8000
+
+	# Everything else -> the built React SPA (bun run build -> frontend/dist),
+	# mounted read-only into the caddy container by server_bootstrap.sh.
+	root * /srv/pricewatch
+	try_files {path} /index.html
+	file_server
+}
