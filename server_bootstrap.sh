@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # server_bootstrap.sh — bring up pricewatch + pricedrop on a brand-new Ubuntu box.
 #
-# This script is IDENTICAL in both repos (pricewatch/server_bootstrap.sh and
-# pricedrop/server_bootstrap.sh) — pricewatch/server_bootstrap.sh is the
-# source of truth. It bootstraps BOTH apps regardless of which repo you
-# happened to clone first, because they share one server + one reverse proxy.
+# This is the CANONICAL copy. pricedrop/server_bootstrap.sh is a thin wrapper
+# that fetches and execs this file, so there is only one copy to maintain.
+# It bootstraps BOTH apps regardless of which repo you happened to clone
+# first, because they share one server + one reverse proxy.
 #
 # ⚠️  NOT TESTED END-TO-END — the dev sandbox that wrote this script has
 #     docker blocked, so this has only been syntax- and lint-checked
