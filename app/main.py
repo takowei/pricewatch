@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -26,17 +27,31 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
+    cfg = get_settings()
     app = FastAPI(
         title="PriceWatch API",
         version="0.1.0",
         description="Sale price tracking with per-user watchlists and alerts.",
         lifespan=lifespan,
+        docs_url="/docs" if cfg.enable_docs else None,
+        redoc_url="/redoc" if cfg.enable_docs else None,
+        openapi_url="/openapi.json" if cfg.enable_docs else None,
     )
 
     # Rate limiting
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.add_middleware(SlowAPIMiddleware)
+
+    # CORS: the frontend is a separately-hosted SPA (different origin),
+    # so the browser needs an explicit allow-list. Never "*".
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cfg.cors_origins_list,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     # Routers
     app.include_router(health.router)

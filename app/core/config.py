@@ -30,6 +30,19 @@ class Settings(BaseSettings):
     app_env: str = "development"
     log_level: str = "INFO"
 
+    # CORS: comma-separated list of exact frontend origins allowed to call
+    # this API. Never "*" in production. Defaults to the Vite dev server.
+    cors_origins: str = "http://localhost:5173"
+
+    # API docs (Swagger UI / ReDoc / raw OpenAPI schema) hand an anonymous
+    # internet caller a full map of every route and schema. Off by default;
+    # opt in for local development with ENABLE_DOCS=1.
+    enable_docs: bool = False
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
 
 _settings: Settings | None = None
 
