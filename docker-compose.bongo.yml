@@ -1,0 +1,48 @@
+# Bongo-server variant of docker-compose.yml.
+#
+# Differences from the main docker-compose.yml (which assumes a full domain +
+# Caddy reverse-proxy setup per DEPLOY-RUNBOOK.md):
+#   - No "edge" network / Caddy — bongo is rootless Docker with no port
+#     80/443 access, so TLS termination + the built frontend SPA are out of
+#     scope for this deploy. Only the backend API is exposed directly.
+#   - restart: unless-stopped on every service (bongo has systemd-user linger
+#     enabled, so this is what brings services back after a reboot).
+#
+# Usage (from the directory this file lives in):
+#   docker compose -f docker-compose.bongo.yml up -d --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pricewatch-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pricewatch
+      POSTGRES_USER: pricewatch
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pricewatch -d pricewatch"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  app:
+    build: .
+    container_name: pricewatch-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://pricewatch:${POSTGRES_PASSWORD:-changeme}@postgres:5432/pricewatch
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1"
+
+volumes:
+  pgdata:
