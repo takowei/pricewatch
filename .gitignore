@@ -9,3 +9,6 @@ venv/
 *.db
 *.sqlite3
 pricewatch_dev.db
+
+# build artifacts
+*.egg-info/

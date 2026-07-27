@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml ./
+# setuptools needs the "app" package directory present to resolve metadata
+# (pyproject.toml declares packages = ["app"]), so copy it before installing.
+COPY app/ ./app/
 # Install project deps into an isolated prefix so we can copy only that layer
 RUN pip install --no-cache-dir --prefix=/install ".[dev]" 2>/dev/null || \
     pip install --no-cache-dir --prefix=/install .
