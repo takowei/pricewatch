@@ -2,7 +2,7 @@
 
 > Multi-user price-alert SaaS backend — track product prices, get notified the moment a watched item hits your target or drops.
 
-PriceWatch began as a personal sale-scraping script ([sale-tracker](https://github.com/takowei/sale-tracker), which scraped 363 live products with working Telegram alerts) and was rewritten into a **multi-user service built to a ship-to-production standard**: layered architecture, real authentication, background scheduling, containerization, and CI.
+PriceWatch began as a personal sale-scraping script ([sale-tracker](https://github.com/takowei/sale-tracker), which scraped 363 live products with working Telegram alerts). Turning a script that works for one person into a service other people can log into and trust is a different problem — auth has to be real, not skipped; a "price dropped" alert has to be deduplicated so it never lies about firing twice. That rewrite is this repo: **a multi-user service built to a ship-to-production standard**, layered architecture, real authentication, background scheduling, containerization, and CI.
 
 **Stack:** Python · FastAPI · SQLModel · PostgreSQL · Alembic · JWT (argon2) · APScheduler · Docker · React + TypeScript + Vite
 
