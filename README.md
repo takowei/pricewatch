@@ -104,7 +104,7 @@ app/
   main.py         # app factory + lifespan
 alembic/          # migrations
 frontend/         # Vite + React + TypeScript SPA
-tests/            # 60 pytest tests (offline, mocked)
+tests/            # 69 pytest tests (offline, mocked)
 Dockerfile · docker-compose.yml · .github/ (CI)
 ```
 

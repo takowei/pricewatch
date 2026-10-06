@@ -33,6 +33,6 @@ jobs:
 
       - name: Run tests (SQLite in-memory)
         env:
-          DATABASE_URL: sqlite:///:memory:
+          DATABASE_URL: "sqlite:///:memory:"
           JWT_SECRET: ci-test-secret
         run: pytest tests/ -v --tb=short
