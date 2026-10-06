@@ -8,7 +8,7 @@
 - **重用來源**：`~/workspace/sale-tracker/` 的 UNIQLO（官方 API，穩）/ NET 爬蟲解析 100% 可搬；`tracking.py` 的降價/達標偵測是「智識核心」，搬進 service 層、改成多使用者。**只讀 sale-tracker、不要改它**（另一個 agent 正在給它補測試）。
 - **技術選型**：SQLModel + Alembic、APScheduler（非 Celery）、FastAPI 三層（router→service→repository）、JWT(access+refresh) + argon2、同步（psycopg3 sync）。
 - **自刻 vs vibe-code**：自刻＝① auth/JWT ② 降價偵測演算法 ③ repository 層邊界 ④ DB schema。其餘（CRUD、Dockerfile、CI yaml、scraper 搬移）vibe-code。
-- **可逆 vs 需 Root**：寫程式/本機跑/測試/CI 全可逆、自主做。需 Root（不可逆）＝開雲端機、買網域、設 DNS、放 production secrets、Telegram bot token。沙箱 docker 被封，compose 由 Root 在本機或既有 AWS Tokyo box 跑。
+- **可逆 vs 需 維護者**：寫程式/本機跑/測試/CI 全可逆、自主做。需 維護者（不可逆）＝開雲端機、買網域、設 DNS、放 production secrets、Telegram bot token。沙箱 docker 被封，compose 由 維護者 在本機或既有 AWS Tokyo box 跑。
 
 ---
 
@@ -92,7 +92,7 @@ FastAPI 自動產 /docs + /openapi.json → README 放截圖。
 
 ## 4. 分階段實作（依賴 + 可逆性）
 
-寫程式/測試/本機跑全部**可逆、自主**。需 Root 的明確標出。
+寫程式/測試/本機跑全部**可逆、自主**。需 維護者 的明確標出。
 
 - **Phase 0 鷹架**：pyproject.toml（FastAPI/SQLModel/alembic/psycopg/pydantic-settings/argon2/pyjwt/pytest/httpx/ruff）、core/config.py、.env.example（先定 env 名）。
 - **Phase 1 DB 地基**：5 SQLModel models(★) → session.py + alembic init → 第一個 migration → `compose up postgres` + `alembic upgrade head` 驗證。
@@ -100,12 +100,12 @@ FastAPI 自動產 /docs + /openapi.json → README 放截圖。
 - **Phase 3 搬爬蟲+ingest**（大半 vibe-code）：搬 uniqlo/net 進 app/scrapers/ 抽 base.py Protocol、輸出改 DTO → ingest_service upsert products(依 url)+price_history(同日覆寫)。可與 Phase 2 並行。**補：尊重 robots.txt、禮貌限速、註明個人研究用途。**
 - **Phase 4 Watchlist+Alert(★演算法自刻)**：watchlist CRUD+測試 → alert_service（搬 check_watchlist+\_prev_price，改多使用者、去重用 DB unique）。**純函式、不需 DB 即可單元測試。**
 - **Phase 5 背景排程**：scheduler.py(APScheduler) + tasks.scrape_all（scrape→ingest→detect→notify_telegram）→ main.py lifespan 啟動（每日 cron）。注意：uvicorn 多 worker 會跑多份 scheduler → 單 worker 或加 job 鎖。
-- **Phase 6 容器化**：Dockerfile(multi-stage/非root/healthcheck) + compose(app+postgres, depends_on healthy)。沙箱 docker 封 → Root 在本機/AWS Tokyo box 跑。
+- **Phase 6 容器化**：Dockerfile(multi-stage/非root/healthcheck) + compose(app+postgres, depends_on healthy)。沙箱 docker 封 → 維護者 在本機/AWS Tokyo box 跑。
 - **Phase 7 CI**：.github/workflows/ci.yml（ruff check → pytest，含 `services: postgres` + health check）。**補：可加 mypy（SQLModel 有型別，type-safety 訊號）。**
-- **Phase 8 上線(★需 Root/不可逆)**：開/選雲端機（可重用 AWS Tokyo box）、買網域+DNS+HTTPS(Caddy/nginx+Let's Encrypt，花錢)、放 production secrets+Telegram token、README 補架構圖+Swagger 截圖+live demo URL。
+- **Phase 8 上線(★需 維護者/不可逆)**：開/選雲端機（可重用 AWS Tokyo box）、買網域+DNS+HTTPS(Caddy/nginx+Let's Encrypt，花錢)、放 production secrets+Telegram token、README 補架構圖+Swagger 截圖+live demo URL。
 - **Phase 9 前端 live demo(★審視補)**：frontend/ 沿用 sale-tracker React UI，改成登入後叫真 API（list products / 管 watchlist / 看 alerts）；部署成可點 URL。
 
-順序：0 → 1 → (2 ∥ 3) → 4 → 5 → 6 → 7 → (8 需 Root) → 9。Phase 8 前全部可本機跑起整套（含 compose postgres），不依賴 Root。
+順序：0 → 1 → (2 ∥ 3) → 4 → 5 → 6 → 7 → (8 需 維護者) → 9。Phase 8 前全部可本機跑起整套（含 compose postgres），不依賴 維護者。
 
 ---
 

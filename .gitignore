@@ -12,3 +12,7 @@ pricewatch_dev.db
 
 # build artifacts
 *.egg-info/
+
+# local AI-assistant notes and settings
+CLAUDE.md
+.claude/

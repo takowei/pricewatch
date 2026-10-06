@@ -2,7 +2,7 @@
 
 Human-readable checklist for going from "brand-new Ubuntu box" to "both apps
 live over HTTPS." Written for whoever has the server in front of them
-(probably Root) — every step is one command.
+(the maintainer) — every step is one command.
 
 > This is the combined runbook for **both** apps since they share one server
 > and one reverse proxy. `pricedrop/DEPLOY-RUNBOOK.md` is a short pointer
